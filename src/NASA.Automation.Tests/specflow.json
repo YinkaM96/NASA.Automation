@@ -1,0 +1,22 @@
+{
+  "language": {
+    "feature": "en-us"
+  },
+  "bindingCulture": {
+    "name": "en-us"
+  },
+  "generator": {
+    "allowDebugGeneratedFiles": true,
+    "allowRowTests": true,
+    "skipParallelizableMarkerForScenario": false
+  },
+  "runtime": {
+    "stopAtFirstError": false,
+    "missingOrPendingStepsOutcome": "Inconclusive"
+  },
+  "stepAssemblies": [],
+  "trace": {
+    "traceSuccessfulSteps": true,
+    "traceTimings": true
+  }
+}

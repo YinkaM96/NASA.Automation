@@ -33,3 +33,6 @@ packages/
 *.bak
 *.tmp
 *.swp
+
+# specflow
+*.feature.cs

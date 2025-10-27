@@ -37,15 +37,18 @@ public class NasaUiStepDefs
     public async Task WhenIFillTheRegistrationFormWith(Table table)
     {
         var data = table.Rows.ToDictionary(r => r.Keys.First(), r => r.Values.First());
-        var fullName = data.TryGetValue("FullName", out var n) ? n : "Test User";
+
+        var firstName = data.TryGetValue("FirstName", out var fn) ? fn : "Test";
+        var lastName = data.TryGetValue("LastName", out var ln) ? ln : "User";
         var email = data.TryGetValue("Email", out var e) ? e : $"testuser+{Guid.NewGuid():N}@example.com";
-        var reason = data.TryGetValue("Reason", out var r) ? r : "Automated test";
+        var reason = data.TryGetValue("Reason", out var rs) ? rs : "Automated test";
 
         var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
-        await signUpPage.FillFormAsync(fullName, email, reason);
+        await signUpPage.FillFormAsync(firstName, lastName, email, reason);
 
         _context["email"] = email;
     }
+
 
     [When(@"I submit the registration form")]
     public async Task WhenISubmitTheRegistrationForm()

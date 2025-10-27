@@ -23,22 +23,35 @@ public class Hooks
         var browser = await pw.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = ConfigManager.Headless,
-            Args = new[] { "--disable-gpu", "--no-sandbox" }
+            Args = new[]
+            {
+                "--disable-gpu",
+                "--no-sandbox",
+                "--start-maximized"
+            }
         });
 
-        var browserContext = await browser.NewContextAsync(new()
+        // Create a new context without viewport limits (maximizes window)
+        var browserContext = await browser.NewContextAsync(new BrowserNewContextOptions
         {
-            ViewportSize = new() { Width = 1280, Height = 900 }
+            ViewportSize = null // Setting to null means use full available window size
         });
 
         var page = await browserContext.NewPageAsync();
+
+        // Optional: explicitly maximize the page window in headed mode
+        if (!ConfigManager.Headless)
+        {
+            await page.EvaluateAsync("window.moveTo(0, 0); window.resizeTo(screen.width, screen.height);");
+        }
+
         var signUpPage = new NasaSignUpPage(page);
 
         _context["browser"] = browser;
         _context["page"] = page;
         _context["signUpPage"] = signUpPage;
 
-        Console.WriteLine("🌐 Browser launched and Playwright context initialized for @ui scenario.");
+        Console.WriteLine("Browser launched in maximized mode for @ui scenario.");
     }
 
     // Teardown after UI Scenarios
@@ -60,7 +73,7 @@ public class Hooks
         }
     }
 
-    // Optional: global hooks
+    // Global hooks
     [BeforeTestRun]
     public static void BeforeTestRun()
     {

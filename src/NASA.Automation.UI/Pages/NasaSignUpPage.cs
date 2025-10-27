@@ -21,16 +21,28 @@ public class NasaSignUpPage
             await cta.First.ClickAsync(new LocatorClickOptions { Timeout = 10000 });
     }
 
-    public async Task FillFormAsync(string fullName, string email, string reason)
+    public async Task FillFormAsync(string firstName, string lastName, string email, string reason)
     {
-        // Flexible selectors to handle content changes
-        var fullNameInput = _page.Locator("input[name='fullName'], input#fullName, input[aria-label*='Full Name' i]");
-        var emailInput = _page.Locator("input[type='email'], input[name='email'], input#email, input[aria-label*='Email' i]");
-        var reasonArea = _page.Locator("textarea[name='reason'], textarea#reason, textarea[aria-label*='Reason' i]");
+        // Flexible selectors to handle possible DOM or attribute changes
+        var firstNameInput = _page.Locator(
+            "input[id='first_name'], input[name='first_name'], input[aria-label*='First Name' i], input[placeholder*='First Name' i]"
+        );
 
-        if (await fullNameInput.CountAsync() > 0) await fullNameInput.First.FillAsync(fullName);
+        var lastNameInput = _page.Locator(
+            "input[id='last_name'], input[name='last_name'], input[aria-label*='Last Name' i], input[placeholder*='Last Name' i]"
+        );
+
+        var emailInput = _page.Locator(
+            "input[id='email'], input[name='email'], input[type='email'], input[aria-label*='Email' i], input[placeholder*='Email' i]"
+        );
+
+        var reasonTextArea = _page.Locator(
+            "textarea[id='reason'], textarea[name='reason'], textarea[aria-label*='Reason' i], textarea[placeholder*='Reason' i]"
+        );
+        if (await firstNameInput.CountAsync() > 0) await firstNameInput.First.FillAsync(firstName);
+        if (await lastNameInput.CountAsync() > 0) await lastNameInput.First.FillAsync(lastName);
         if (await emailInput.CountAsync() > 0) await emailInput.First.FillAsync(email);
-        if (await reasonArea.CountAsync() > 0) await reasonArea.First.FillAsync(reason);
+        if (await reasonTextArea.CountAsync() > 0) await reasonTextArea.First.FillAsync(reason);
     }
 
     public async Task SubmitAsync()
