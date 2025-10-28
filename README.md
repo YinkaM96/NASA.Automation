@@ -227,5 +227,38 @@ For this reason, a **hybrid architecture** is often best:
 
 ---
 
+
+### Leveraging AI Copilot & Playwright MCP for Automation Scaling
+
+AI-assisted tooling like **GitHub Copilot**, **ChatGPT**, and **Playwright MCP (Model Context Protocol)** can significantly accelerate automation design, maintenance, and scale.
+
+#### Potential Integrations
+
+1. **AI-assisted Page Object scaffolding**
+   - Use Playwright’s `codegen` in conjunction with AI models to auto-generate Page Object classes in C#.
+   - Generate intelligent locators and semantic element wrappers using Copilot prompts.
+
+2. **Dynamic locator self-healing (MCP)**
+   - Playwright MCP can auto-detect broken selectors and re-map them to stable identifiers dynamically at runtime.
+   - Reduces manual updates when UI changes occur.
+
+3. **AI-driven Gherkin & test case generation**
+   - Use Copilot or OpenAI-based tools to automatically convert Figma/UI flow documentation or API specs into Gherkin test scenarios.
+   - Encourages consistent language and test coverage.
+
+4. **Intelligent locator recommendations**
+   - AI can suggest robust locators (`getByRole`, `aria-label`, `data-testid`) based on DOM patterns, minimizing test fragility.
+
+5. **Autonomous visual diffing**
+   - Integrate Copilot + Playwright trace analysis to detect visual regressions between builds automatically.
+
+#### Vision: Self-Healing Automation
+By integrating AI Copilot with Playwright MCP, the automation framework can evolve into a **self-healing, AI-augmented test system** that:
+- Learns DOM structure changes in CI and corrects selectors automatically,
+- Uses Copilot-assisted templates to build new PageObjects,
+- Syncs and validates UI model consistency across environments.
+
+---
+
  **Author:** Yinka Merit  
  **Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · GitHub Actions
