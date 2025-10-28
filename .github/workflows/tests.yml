@@ -7,35 +7,14 @@ on:
     branches: [ main, development-branch ]
 
 jobs:
-  api-tests:
-    name: Run API Tests (@api)
+  tests:
+    name: Run API + UI Tests (Allure Combined)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build project
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run SpecFlow API tests
-        run: dotnet test --configuration Release --filter "TestCategory=api" --no-build
-
-  ui-tests:
-    name: Run UI Tests (@ui)
-    runs-on: ubuntu-latest
-    needs: api-tests
-    if: ${{ always() }}
-
-    steps:
+      # ------------------------------
+      # SETUP
+      # ------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -52,10 +31,56 @@ jobs:
 
       - name: Install Playwright CLI and browsers
         run: |
-            dotnet tool install --global Microsoft.Playwright.CLI
-            playwright install --with-deps
+          dotnet tool install --global Microsoft.Playwright.CLI
+          playwright install --with-deps
 
-      - name: Run SpecFlow UI tests (headless)
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline --save-dev
+
+      # ------------------------------
+      # API TESTS
+      # ------------------------------
+      - name: Run SpecFlow API tests (@api)
+        run: dotnet test --configuration Release \
+              --filter "TestCategory=api" \
+              --no-build \
+              --logger "trx;LogFileName=api_results.trx" \
+              --results-directory ./AllureResults
         env:
           HEADLESS: true
-        run: dotnet test --configuration Release --filter "TestCategory=ui" --no-build
+          ALLURE_SUITE: "API Tests"
+          ALLURE_EPIC: "NASA DONKI API"
+
+      # ------------------------------
+      # UI TESTS
+      # ------------------------------
+      - name: Run SpecFlow UI tests (@ui)
+        run: dotnet test --configuration Release \
+              --filter "TestCategory=ui" \
+              --no-build \
+              --logger "trx;LogFileName=ui_results.trx" \
+              --results-directory ./AllureResults
+        env:
+          HEADLESS: true
+          ALLURE_SUITE: "UI Tests"
+          ALLURE_EPIC: "NASA API Sign-Up Flow"
+
+      # ------------------------------
+      # REPORT GENERATION
+      # ------------------------------
+      - name: Generate combined Allure report
+        run: allure generate ./AllureResults --clean -o ./AllureReport
+
+      - name: Upload Allure report (combined)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AllureReport
+          path: ./AllureReport
+
+      - name: Upload raw Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AllureResults
+          path: ./AllureResults
