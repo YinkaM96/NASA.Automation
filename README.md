@@ -196,5 +196,36 @@ pwsh src/NASA.Automation.Tests/bin/Debug/net9.0/playwright.ps1 install
 
 ---
 
+## Improvements & Considerations
+
+### Simplifying API Test Architecture
+While SpecFlow is excellent for BDD-style collaboration, the NASA public API endpoints (CME/FLR) are **deterministic and input/output driven**, not business-process heavy.  
+This means the same validations could be implemented more cleanly using **NUnit** or **xUnit**, without feature files or step bindings.
+
+#### Benefits of moving API tests to NUnit:
+- **Reduced boilerplate:** No need for `.feature` files, binding classes, or Gherkin parsing.
+- **Faster maintenance:** Adding new endpoints only requires a new `[Test]` method, not new step definitions.
+- **Better IDE support:** Visual Studio and JetBrains Rider provide direct test navigation for NUnit attributes.
+- **Cleaner debugging:** Stack traces are shorter and error outputs more direct.
+
+#### Example comparison:
+
+| SpecFlow (current) | NUnit (simplified) |
+|--------------------|--------------------|
+| `When I request CME data from "2023-01-01" to "2023-01-07"` | `[TestCase("2023-01-01", "2023-01-07")] public void CME_ValidRequest_Returns200()` |
+| Steps + Feature file overhead | Single, readable test method |
+| Requires binding setup | No external glue code |
+
+For this reason, a **hybrid architecture** is often best:
+- Keep SpecFlow for **UI flows** and **multi-step journeys** (sign-up process, validations).
+- Use **NUnit** for **API and integration tests**, where readability > business traceability.
+
+### Additional Improvements
+- Introduce **parallel test execution** for API tests to reduce runtime.  
+- Add **environment configuration profiles** (e.g., `qa`, `sit`, `prod-sim`) to `ConfigManager`.  
+- Consider a **base test fixture pattern** for API tests, using shared setup/teardown in NUnit.
+
+---
+
  **Author:** Yinka Merit  
  **Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · GitHub Actions
