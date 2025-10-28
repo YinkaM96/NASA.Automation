@@ -47,11 +47,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
       - name: Build project
         run: dotnet build --configuration Release --no-restore
+
+      - name: Install Playwright CLI and browsers
+        run: |
+            dotnet tool install --global Microsoft.Playwright.CLI
+            playwright install --with-deps
 
       - name: Run SpecFlow UI tests (headless)
         env:
