@@ -15,7 +15,7 @@ public class NasaUiStepDefs
         _context = context;
     }
 
-    [When(@"I navigate to the NASA API home page")]
+    [StepDefinition(@"I navigate to the NASA API home page")]
     public async Task WhenINavigateToTheNASAAPIHomePage()
     {
         var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
@@ -58,6 +58,14 @@ public class NasaUiStepDefs
 
     [Then(@"I should see a confirmation or success message")]
     public async Task ThenIShouldSeeAConfirmationOrSuccessMessage()
+    {
+        var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
+        var successVisible = await signUpPage.IsConfirmationVisibleAsync();
+        successVisible.Should().BeTrue("a confirmation or success message should be visible after submission");
+    }
+
+    [Then(@"I should see the warning message ""(.*)"" ")]
+    public async Task ThenIShouldSeeAWarningMessage()
     {
         var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
         var successVisible = await signUpPage.IsConfirmationVisibleAsync();
