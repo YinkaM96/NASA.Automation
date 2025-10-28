@@ -1,5 +1,6 @@
 ﻿using Microsoft.Playwright;
 using NASA.Automation.Core;
+using NASA.Automation.UI.Utils;
 
 namespace NASA.Automation.UI.Pages;
 
@@ -14,6 +15,41 @@ public class NasaSignUpPage
         await _page.GotoAsync(ConfigManager.NasaApiHome, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
     }
 
+    public async Task<bool> ValidatePageLoadedAsync()
+    {
+        Console.WriteLine("Waiting for NASA Sign-Up page to load...");
+
+        try
+        {
+            // Wait for the page and network to stabilize
+            await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+            await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Primary element indicating the page is ready
+            var generateApiKeyButton = _page.Locator("a[href='#signUp']:has(span:has-text('Generate API Key'))");
+
+            // Wait up to 15 seconds for it to become visible
+            await generateApiKeyButton.First.WaitForAsync(new LocatorWaitForOptions
+            {
+                Timeout = 15000,
+                State = WaitForSelectorState.Visible
+            });
+
+            Console.WriteLine("NASA Sign-Up page loaded successfully.");
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            Console.WriteLine("Timed out waiting for NASA Sign-Up page to load.");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to validate page load: {ex.Message}");
+            return false;
+        }
+    }
+
     public async Task StartRegistrationAsync()
     {
         var cta = _page.Locator("a:has-text('Sign Up'), a:has-text('Get Started'), a:has-text('Register')");
@@ -25,31 +61,32 @@ public class NasaSignUpPage
     {
         // Flexible selectors to handle possible DOM or attribute changes
         var firstNameInput = _page.Locator(
-            "input[id='first_name'], input[name='first_name'], input[aria-label*='First Name' i], input[placeholder*='First Name' i]"
+            "input[id='user_first_name'], input[name='user[first_name]']"
         );
 
         var lastNameInput = _page.Locator(
-            "input[id='last_name'], input[name='last_name'], input[aria-label*='Last Name' i], input[placeholder*='Last Name' i]"
+            "input[id='user_last_name'], input[name='user[last_name]']"
         );
 
         var emailInput = _page.Locator(
-            "input[id='email'], input[name='email'], input[type='email'], input[aria-label*='Email' i], input[placeholder*='Email' i]"
+            "input[id='user_email'], input[name='user[email]']"
         );
 
         var reasonTextArea = _page.Locator(
-            "textarea[id='reason'], textarea[name='reason'], textarea[aria-label*='Reason' i], textarea[placeholder*='Reason' i]"
+            "textarea[id='user_use_description'], textarea[name='user[use_description]']"
         );
-        if (await firstNameInput.CountAsync() > 0) await firstNameInput.First.FillAsync(firstName);
-        if (await lastNameInput.CountAsync() > 0) await lastNameInput.First.FillAsync(lastName);
-        if (await emailInput.CountAsync() > 0) await emailInput.First.FillAsync(email);
-        if (await reasonTextArea.CountAsync() > 0) await reasonTextArea.First.FillAsync(reason);
+
+        await ElementUtils.SafeFillAsync(firstNameInput, firstName, "First Name");
+        await ElementUtils.SafeFillAsync(lastNameInput, lastName, "Last Name");
+        await ElementUtils.SafeFillAsync(emailInput, email, "Email");
+        await ElementUtils.SafeFillAsync(reasonTextArea, reason, "Reason");
     }
 
     public async Task SubmitAsync()
     {
-        var submit = _page.Locator("button[type='submit'], button:has-text('Sign Up'), button:has-text('Register'), input[type='submit']");
+        var submit = _page.Locator("button[type='submit']:has-text('Sign Up')");
         if (await submit.CountAsync() > 0)
-            await submit.First.ClickAsync();
+            await ElementUtils.SafeClickAsync(submit, "Sign Up");
     }
 
     public async Task<bool> IsConfirmationVisibleAsync()

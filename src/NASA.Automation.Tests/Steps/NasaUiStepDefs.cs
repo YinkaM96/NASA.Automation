@@ -21,9 +21,8 @@ public class NasaUiStepDefs
         var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
         await signUpPage.NavigateAsync();
 
-        var page = _context.Get<IPage>("page");
-        var title = await page.TitleAsync();
-        title.Should().Contain("NASA", "the page title should indicate NASA site");
+        var pageLoaded = await signUpPage.ValidatePageLoadedAsync();
+        pageLoaded.Should().BeTrue("the NASA API homepage should load successfully before continuing.");
     }
 
     [When(@"I start the registration process")]
