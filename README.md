@@ -4,8 +4,8 @@ Automated test suite for NASA public APIs and the NASA Open APIs sign-up UI.
 Built with **SpecFlow**, **RestSharp**, and **Playwright for .NET 9**.
 
 This project demonstrates:
-- API automation with SpecFlow (`@api` tagged scenarios)
-- UI automation using Playwright (`@ui` tagged scenarios)
+- API automation with SpecFlow (`@API` tagged scenarios)
+- UI automation using Playwright (`@UI` tagged scenarios)
 - CI/CD integration via GitHub Actions (headless UI tests)
 - HTML reporting with **ExtentReports**
 
@@ -21,8 +21,8 @@ This project demonstrates:
 | `NASA.Automation.Tests` | SpecFlow features, steps, hooks, and ExtentReports integration |
 
 ### Tags and test filters
-- `@api` → API tests → `dotnet test --filter "TestCategory=api"`
-- `@ui` → UI tests → `dotnet test --filter "TestCategory=ui"`
+- `@API` → API tests → `dotnet test --filter "TestCategory=API"`
+- `@UI` → UI tests → `dotnet test --filter "TestCategory=UI"`
 
 ### Headless vs. headed mode
 - Controlled via `ConfigManager.Headless`
@@ -73,12 +73,12 @@ dotnet test
 
 ### Run only API tests
 ```bash
-dotnet test --filter "TestCategory=api"
+dotnet test --filter "TestCategory=API"
 ```
 
 ### Run only UI tests (headless by default)
 ```bash
-dotnet test --filter "TestCategory=ui"
+dotnet test --filter "TestCategory=UI"
 ```
 
 ### Headed (visible) browser runs
@@ -86,17 +86,17 @@ dotnet test --filter "TestCategory=ui"
 #### PowerShell
 ```powershell
 $env:HEADLESS = "0"
-dotnet test --filter "TestCategory=ui"
+dotnet test --filter "TestCategory=UI"
 ```
 
 #### Bash / macOS / WSL
 ```bash
-HEADLESS=0 dotnet test --filter "TestCategory=ui"
+HEADLESS=0 dotnet test --filter "TestCategory=UI"
 ```
 
 #### Windows CMD
 ```cmd
-set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
+set HEADLESS=0 && dotnet test --filter "TestCategory=UI"
 ```
 
 > **Tip:** Keep `HEADLESS=1` in CI (headless mode) unless running on a self-hosted agent with a desktop session.
@@ -109,7 +109,7 @@ set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
 2. (Optional) Add a `test.runsettings` file to the root (see below).  
 3. In Visual Studio:  
    **Test → Configure Run Settings → Select Solution Wide Run Settings File**  
-4. Open **Test Explorer**, and filter by `TestCategory=ui` or `TestCategory=api`.  
+4. Open **Test Explorer**, and filter by `TestCategory=UI` or `TestCategory=API`.  
 5. When `HEADLESS=0`, a visible browser will launch for UI tests.
 
 ### Example `test.runsettings`
