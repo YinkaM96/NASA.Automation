@@ -4,7 +4,7 @@ Feature: NASA Open API Sign-Up Page
   Background: 
       Given I navigate to the NASA API home page
 
-  @ui @signup
+  @UI @Signup
   Scenario: Complete the sign-up flow with a dummy email
     When I start the registration process
     And I fill the registration form with:
@@ -13,7 +13,7 @@ Feature: NASA Open API Sign-Up Page
     And I submit the registration form
     Then I should see a confirmation or success message
 
-  @ui @signup
+  @UI @Signup
   Scenario Outline: Complete the sign-up flow with a invalid input
     When I start the registration process
     And I fill the registration form with:
@@ -29,7 +29,7 @@ Examples:
     | Empty Last Name  | Test      |          | testuser@example.com  |
     | Empty Email      | Test      | User     |                       |
 
-  @ui @signup
+  @UI @Signup
   Scenario: Duplicate email is handled (if server-side enforced)
     When I start the registration process
     And I fill the registration form with:

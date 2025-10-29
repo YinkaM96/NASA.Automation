@@ -7,6 +7,7 @@ This project demonstrates:
 - API automation with SpecFlow (`@api` tagged scenarios)
 - UI automation using Playwright (`@ui` tagged scenarios)
 - CI/CD integration via GitHub Actions (headless UI tests)
+- HTML reporting with **ExtentReports**
 
 ---
 
@@ -17,7 +18,7 @@ This project demonstrates:
 | `NASA.Automation.Core` | Shared utilities (e.g., config, constants) |
 | `NASA.Automation.API` | REST clients using **RestSharp** |
 | `NASA.Automation.UI` | Page Objects and Playwright setup |
-| `NASA.Automation.Tests` | SpecFlow features, steps, and hooks |
+| `NASA.Automation.Tests` | SpecFlow features, steps, hooks, and ExtentReports integration |
 
 ### Tags and test filters
 - `@api` → API tests → `dotnet test --filter "TestCategory=api"`
@@ -44,8 +45,6 @@ To run tests locally, you’ll need:
 
 ## Local setup
 
-Run the following commands once in your project root:
-
 ```powershell
 # Restore dependencies
 dotnet restore
@@ -60,7 +59,7 @@ dotnet tool install --global Microsoft.Playwright.CLI
 playwright install --with-deps
 ```
 
- This downloads and configures the browsers (Chromium, Firefox, WebKit) for .NET.  
+This downloads and configures the browsers (Chromium, Firefox, WebKit) for .NET.  
 You’ll only need to re-run it if Playwright updates.
 
 ---
@@ -126,9 +125,50 @@ set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
 
 ---
 
-## CI/CD (GitHub Actions)
+## ExtentReports Integration
 
-The GitHub Actions workflow (`.github/workflows/tests.yml`) runs UI tests in **headless mode**.
+### Overview
+ExtentReports provides a rich HTML test report visualizing:
+- Features → Scenarios → Steps hierarchy
+- Pass/Fail status and stack traces
+- Scenario Outline argument support
+- System info (environment, tester, app, timestamps)
+
+### Implementation
+File: `NASA.Automation.Tests/Hooks/ExtentReportHooks.cs`
+
+Key behavior:
+- Initialized via `[BeforeTestRun]` and flushed in `[AfterTestRun]`
+- Each report is timestamped:  
+  ```csharp
+  var reportName = $"NASA_Automation_Report_{DateTime.Now:yyyyMMdd_HHmmss}.html";
+  ```
+- Stored under:
+  ```
+  src/NASA.Automation.Tests/bin/Debug/net9.0/ExtentReports/
+  ```
+
+### Local Report Access
+After running tests locally, open the report in your browser:
+```bash
+start src/NASA.Automation.Tests/bin/Debug/net9.0/ExtentReports/NASA_Automation_Report_*.html
+```
+
+### CI Integration
+In `.github/workflows/tests.yml`:
+```yaml
+- name: Upload Extent HTML Report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: ExtentReports
+    path: src/NASA.Automation.Tests/bin/Release/net9.0/ExtentReports
+```
+You can download the artifact from GitHub Actions after each run.
+
+---
+
+## CI/CD (GitHub Actions)
 
 Example excerpt:
 
@@ -152,113 +192,24 @@ Example excerpt:
 
 ---
 
-## Summary
-
-| Step | Command |
-|------|----------|
-| Restore dependencies | `dotnet restore` |
-| Build solution | `dotnet build` |
-| Install Playwright CLI | `dotnet tool install --global Microsoft.Playwright.CLI` |
-| Install browsers | `playwright install --with-deps` |
-| Run API tests | `dotnet test --filter "TestCategory=api"` |
-| Run UI tests (headless) | `dotnet test --filter "TestCategory=ui"` |
-| Run UI tests (headed) | `HEADLESS=0 dotnet test --filter "TestCategory=ui"` |
-
----
-
-## Notes
-
-- Always build the project **before installing browsers**, since the Playwright binaries are generated in the `bin` directory.
-- On CI, Playwright automatically runs in headless mode.
-- If you update Playwright NuGet packages, re-run `playwright install`.
-
----
-
-## Troubleshooting
-
-**Error:**
-```
-Executable doesn't exist at .../headless_shell
-Please run: pwsh bin/Debug/netX/playwright.ps1 install
-```
-
-**Fix:**
-Re-install browsers for .NET Playwright:
-```powershell
-playwright install --with-deps
-```
-
-or rebuild the project and run:
-```powershell
-dotnet build
-pwsh src/NASA.Automation.Tests/bin/Debug/net9.0/playwright.ps1 install
-```
-
----
-
 ## Improvements & Considerations
 
 ### Simplifying API Test Architecture
-While SpecFlow is excellent for BDD-style collaboration, the NASA public API endpoints (CME/FLR) are **deterministic and input/output driven**, not business-process heavy.  
-This means the same validations could be implemented more cleanly using **NUnit** or **xUnit**, without feature files or step bindings.
+While SpecFlow is excellent for BDD-style collaboration, the NASA public API endpoints (CME/FLR) are deterministic and input/output driven.  
+They could be implemented more cleanly using **NUnit** or **xUnit**, reducing step overhead.
 
-#### Benefits of moving API tests to NUnit:
-- **Reduced boilerplate:** No need for `.feature` files, binding classes, or Gherkin parsing.
-- **Faster maintenance:** Adding new endpoints only requires a new `[Test]` method, not new step definitions.
-- **Better IDE support:** Visual Studio and JetBrains Rider provide direct test navigation for NUnit attributes.
-- **Cleaner debugging:** Stack traces are shorter and error outputs more direct.
+Hybrid approach:
+- **SpecFlow** → UI workflows  
+- **NUnit** → API functional validation
 
-#### Example comparison:
-
-| SpecFlow (current) | NUnit (simplified) |
-|--------------------|--------------------|
-| `When I request CME data from "2023-01-01" to "2023-01-07"` | `[TestCase("2023-01-01", "2023-01-07")] public void CME_ValidRequest_Returns200()` |
-| Steps + Feature file overhead | Single, readable test method |
-| Requires binding setup | No external glue code |
-
-For this reason, a **hybrid architecture** is often best:
-- Keep SpecFlow for **UI flows** and **multi-step journeys** (sign-up process, validations).
-- Use **NUnit** for **API and integration tests**, where readability > business traceability.
-
-### Additional Improvements
-- Introduce **parallel test execution** for API tests to reduce runtime.  
-- Add **environment configuration profiles** (e.g., `qa`, `sit`, `prod-sim`) to `ConfigManager`.  
-- Consider a **base test fixture pattern** for API tests, using shared setup/teardown in NUnit.
+### Leveraging AI Copilot & Playwright MCP
+AI tools like GitHub Copilot and Playwright MCP can:
+- Auto-generate PageObject models
+- Heal broken locators
+- Create new Gherkin scenarios from API specs
+- Maintain locator stability automatically
 
 ---
 
-
-### Leveraging AI Copilot & Playwright MCP for Automation Scaling
-
-AI-assisted tooling like **GitHub Copilot**, **ChatGPT**, and **Playwright MCP (Model Context Protocol)** can significantly accelerate automation design, maintenance, and scale.
-
-#### Potential Integrations
-
-1. **AI-assisted Page Object scaffolding**
-   - Use Playwright’s `codegen` in conjunction with AI models to auto-generate Page Object classes in C#.
-   - Generate intelligent locators and semantic element wrappers using Copilot prompts.
-
-2. **Dynamic locator self-healing (MCP)**
-   - Playwright MCP can auto-detect broken selectors and re-map them to stable identifiers dynamically at runtime.
-   - Reduces manual updates when UI changes occur.
-
-3. **AI-driven Gherkin & test case generation**
-   - Use Copilot or OpenAI-based tools to automatically convert Figma/UI flow documentation or API specs into Gherkin test scenarios.
-   - Encourages consistent language and test coverage.
-
-4. **Intelligent locator recommendations**
-   - AI can suggest robust locators (`getByRole`, `aria-label`, `data-testid`) based on DOM patterns, minimizing test fragility.
-
-5. **Autonomous visual diffing**
-   - Integrate Copilot + Playwright trace analysis to detect visual regressions between builds automatically.
-
-#### Vision: Self-Healing Automation
-By integrating AI Copilot with Playwright MCP, the automation framework can evolve into a **self-healing, AI-augmented test system** that:
-- Learns DOM structure changes in CI and corrects selectors automatically,
-- Uses Copilot-assisted templates to build new PageObjects,
-- Syncs and validates UI model consistency across environments.
-
----
-
- **Author:** Yinka Merit  
- **Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · GitHub Actions
+**Author:** Yinka Merit  
+**Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · ExtentReports · GitHub Actions

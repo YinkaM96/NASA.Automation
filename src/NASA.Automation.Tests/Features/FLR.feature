@@ -4,14 +4,14 @@ Feature: Validate Solar Flare (FLR) API
   Background:
     Given the NASA API client is available
 
-  @api @flr @success
+  @API @FLR @Success
   Scenario: Retrieve Solar Flare data for a valid date range
     When I request FLR data from "2023-01-01" to "2023-01-07"
     Then the response status code should be 200
     And the response JSON should be a non-empty array
     And each object should contain the field "flrID"
 
- @api @flr @error
+ @API @FLR @Error
  Scenario: Solar Flare - Too Many Request returns HTTP 429
     When I request FLR data from "2023-01-01" to "2023-01-07"
     And I request FLR data from "2023-01-01" to "2023-01-07"
@@ -19,13 +19,13 @@ Feature: Validate Solar Flare (FLR) API
     And I request FLR data from "2023-01-01" to "2023-01-07"
     Then the response status code should be 429
 
-  @api @flr @error
+ @API @FLR @Error
   Scenario Outline: Solar Flare data - Invalid date format returns HTTP 400
     When I request FLR data from "<startDate>" to "<endDate>"
     Then the response status code should be 400
 
 	Examples: 
-	|                    | startDate  | endDate    |
+	| Test               | startDate  | endDate    |
 	| Missing Start Date |            | 2023-01-07 |
 	| Missing End Date   | 2023-01-01 |            |
 	| Special Character  | 20-01-20!3 | @1-01-2023 |
