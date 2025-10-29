@@ -27,7 +27,9 @@ public class Hooks
             {
                 "--disable-gpu",
                 "--no-sandbox",
-                "--start-maximized"
+                "--start-maximized",
+                "--window-position=0,0",
+                "--window-size=1920,1080"
             }
         });
 
