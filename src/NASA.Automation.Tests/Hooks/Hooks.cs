@@ -16,7 +16,7 @@ public class Hooks
     }
 
     // Setup before UI Scenarios
-    [BeforeScenario("@ui")]
+    [BeforeScenario("@UI")]
     public async Task BeforeUiScenarioAsync()
     {
         var pw = await Playwright.CreateAsync();
@@ -27,7 +27,9 @@ public class Hooks
             {
                 "--disable-gpu",
                 "--no-sandbox",
-                "--start-maximized"
+                "--start-maximized",
+                "--window-position=0,0",
+                "--window-size=1920,1080"
             }
         });
 
@@ -55,7 +57,7 @@ public class Hooks
     }
 
     // Teardown after UI Scenarios
-    [AfterScenario("@ui")]
+    [AfterScenario("@UI")]
     public async Task AfterUiScenarioAsync()
     {
         try

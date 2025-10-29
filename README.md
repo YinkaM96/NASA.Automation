@@ -4,9 +4,10 @@ Automated test suite for NASA public APIs and the NASA Open APIs sign-up UI.
 Built with **SpecFlow**, **RestSharp**, and **Playwright for .NET 9**.
 
 This project demonstrates:
-- API automation with SpecFlow (`@api` tagged scenarios)
-- UI automation using Playwright (`@ui` tagged scenarios)
+- API automation with SpecFlow (`@API` tagged scenarios)
+- UI automation using Playwright (`@UI` tagged scenarios)
 - CI/CD integration via GitHub Actions (headless UI tests)
+- HTML reporting with **ExtentReports**
 
 ---
 
@@ -17,11 +18,11 @@ This project demonstrates:
 | `NASA.Automation.Core` | Shared utilities (e.g., config, constants) |
 | `NASA.Automation.API` | REST clients using **RestSharp** |
 | `NASA.Automation.UI` | Page Objects and Playwright setup |
-| `NASA.Automation.Tests` | SpecFlow features, steps, and hooks |
+| `NASA.Automation.Tests` | SpecFlow features, steps, hooks, and ExtentReports integration |
 
 ### Tags and test filters
-- `@api` → API tests → `dotnet test --filter "TestCategory=api"`
-- `@ui` → UI tests → `dotnet test --filter "TestCategory=ui"`
+- `@API` → API tests → `dotnet test --filter "TestCategory=API"`
+- `@UI` → UI tests → `dotnet test --filter "TestCategory=UI"`
 
 ### Headless vs. headed mode
 - Controlled via `ConfigManager.Headless`
@@ -44,8 +45,6 @@ To run tests locally, you’ll need:
 
 ## Local setup
 
-Run the following commands once in your project root:
-
 ```powershell
 # Restore dependencies
 dotnet restore
@@ -60,7 +59,7 @@ dotnet tool install --global Microsoft.Playwright.CLI
 playwright install --with-deps
 ```
 
- This downloads and configures the browsers (Chromium, Firefox, WebKit) for .NET.  
+This downloads and configures the browsers (Chromium, Firefox, WebKit) for .NET.  
 You’ll only need to re-run it if Playwright updates.
 
 ---
@@ -74,12 +73,12 @@ dotnet test
 
 ### Run only API tests
 ```bash
-dotnet test --filter "TestCategory=api"
+dotnet test --filter "TestCategory=API"
 ```
 
 ### Run only UI tests (headless by default)
 ```bash
-dotnet test --filter "TestCategory=ui"
+dotnet test --filter "TestCategory=UI"
 ```
 
 ### Headed (visible) browser runs
@@ -87,17 +86,17 @@ dotnet test --filter "TestCategory=ui"
 #### PowerShell
 ```powershell
 $env:HEADLESS = "0"
-dotnet test --filter "TestCategory=ui"
+dotnet test --filter "TestCategory=UI"
 ```
 
 #### Bash / macOS / WSL
 ```bash
-HEADLESS=0 dotnet test --filter "TestCategory=ui"
+HEADLESS=0 dotnet test --filter "TestCategory=UI"
 ```
 
 #### Windows CMD
 ```cmd
-set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
+set HEADLESS=0 && dotnet test --filter "TestCategory=UI"
 ```
 
 > **Tip:** Keep `HEADLESS=1` in CI (headless mode) unless running on a self-hosted agent with a desktop session.
@@ -110,7 +109,7 @@ set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
 2. (Optional) Add a `test.runsettings` file to the root (see below).  
 3. In Visual Studio:  
    **Test → Configure Run Settings → Select Solution Wide Run Settings File**  
-4. Open **Test Explorer**, and filter by `TestCategory=ui` or `TestCategory=api`.  
+4. Open **Test Explorer**, and filter by `TestCategory=UI` or `TestCategory=API`.  
 5. When `HEADLESS=0`, a visible browser will launch for UI tests.
 
 ### Example `test.runsettings`
@@ -126,9 +125,50 @@ set HEADLESS=0 && dotnet test --filter "TestCategory=ui"
 
 ---
 
-## CI/CD (GitHub Actions)
+## ExtentReports Integration
 
-The GitHub Actions workflow (`.github/workflows/tests.yml`) runs UI tests in **headless mode**.
+### Overview
+ExtentReports provides a rich HTML test report visualizing:
+- Features → Scenarios → Steps hierarchy
+- Pass/Fail status and stack traces
+- Scenario Outline argument support
+- System info (environment, tester, app, timestamps)
+
+### Implementation
+File: `NASA.Automation.Tests/Hooks/ExtentReportHooks.cs`
+
+Key behavior:
+- Initialized via `[BeforeTestRun]` and flushed in `[AfterTestRun]`
+- Each report is timestamped:  
+  ```csharp
+  var reportName = $"NASA_Automation_Report_{DateTime.Now:yyyyMMdd_HHmmss}.html";
+  ```
+- Stored under:
+  ```
+  src/NASA.Automation.Tests/bin/Debug/net9.0/ExtentReports/
+  ```
+
+### Local Report Access
+After running tests locally, open the report in your browser:
+```bash
+start src/NASA.Automation.Tests/bin/Debug/net9.0/ExtentReports/NASA_Automation_Report_*.html
+```
+
+### CI Integration
+In `.github/workflows/tests.yml`:
+```yaml
+- name: Upload Extent HTML Report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: ExtentReports
+    path: src/NASA.Automation.Tests/bin/Release/net9.0/ExtentReports
+```
+You can download the artifact from GitHub Actions after each run.
+
+---
+
+## CI/CD (GitHub Actions)
 
 Example excerpt:
 
@@ -152,49 +192,24 @@ Example excerpt:
 
 ---
 
-## Summary
+## Improvements & Considerations
 
-| Step | Command |
-|------|----------|
-| Restore dependencies | `dotnet restore` |
-| Build solution | `dotnet build` |
-| Install Playwright CLI | `dotnet tool install --global Microsoft.Playwright.CLI` |
-| Install browsers | `playwright install --with-deps` |
-| Run API tests | `dotnet test --filter "TestCategory=api"` |
-| Run UI tests (headless) | `dotnet test --filter "TestCategory=ui"` |
-| Run UI tests (headed) | `HEADLESS=0 dotnet test --filter "TestCategory=ui"` |
+### Simplifying API Test Architecture
+While SpecFlow is excellent for BDD-style collaboration, the NASA public API endpoints (CME/FLR) are deterministic and input/output driven.  
+They could be implemented more cleanly using **NUnit** or **xUnit**, reducing step overhead.
 
----
+Hybrid approach:
+- **SpecFlow** → UI workflows  
+- **NUnit** → API functional validation
 
-## Notes
-
-- Always build the project **before installing browsers**, since the Playwright binaries are generated in the `bin` directory.
-- On CI, Playwright automatically runs in headless mode.
-- If you update Playwright NuGet packages, re-run `playwright install`.
+### Leveraging AI Copilot & Playwright MCP
+AI tools like GitHub Copilot and Playwright MCP can:
+- Auto-generate PageObject models
+- Heal broken locators
+- Create new Gherkin scenarios from API specs
+- Maintain locator stability automatically
 
 ---
 
-## Troubleshooting
-
-**Error:**
-```
-Executable doesn't exist at .../headless_shell
-Please run: pwsh bin/Debug/netX/playwright.ps1 install
-```
-
-**Fix:**
-Re-install browsers for .NET Playwright:
-```powershell
-playwright install --with-deps
-```
-
-or rebuild the project and run:
-```powershell
-dotnet build
-pwsh src/NASA.Automation.Tests/bin/Debug/net9.0/playwright.ps1 install
-```
-
----
-
- **Author:** Yinka Merit  
- **Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · GitHub Actions
+**Author:** Yinka Merit  
+**Tech Stack:** .NET 9 · SpecFlow · RestSharp · Playwright for .NET · ExtentReports · GitHub Actions

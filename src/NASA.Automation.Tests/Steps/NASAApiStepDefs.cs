@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using NASA.Automation.API;
+using NASA.Automation.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TechTalk.SpecFlow;

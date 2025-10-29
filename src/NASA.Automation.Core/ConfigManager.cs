@@ -4,7 +4,7 @@ public static class ConfigManager
 {
     public static string BaseUrl => "https://api.nasa.gov";
     public static string ApiKey => "DEMO_KEY";
-
+    
     // UI
     public static string NasaApiHome => "https://api.nasa.gov";
 
