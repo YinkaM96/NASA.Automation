@@ -21,14 +21,11 @@ public class NasaSignUpPage
 
         try
         {
-            // Wait for the page and network to stabilize
             await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
             await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-            // Primary element indicating the page is ready
             var generateApiKeyButton = _page.Locator("a[href='#signUp']:has(span:has-text('Generate API Key'))");
 
-            // Wait up to 15 seconds for it to become visible
             await generateApiKeyButton.First.WaitForAsync(new LocatorWaitForOptions
             {
                 Timeout = 15000,
@@ -50,16 +47,8 @@ public class NasaSignUpPage
         }
     }
 
-    public async Task StartRegistrationAsync()
-    {
-        var cta = _page.Locator("a:has-text('Sign Up'), a:has-text('Get Started'), a:has-text('Register')");
-        if (await cta.CountAsync() > 0)
-            await cta.First.ClickAsync(new LocatorClickOptions { Timeout = 10000 });
-    }
-
     public async Task FillFormAsync(string firstName, string lastName, string email, string reason)
     {
-        // Flexible selectors to handle possible DOM or attribute changes
         var firstNameInput = _page.Locator(
             "input[id='user_first_name'], input[name='user[first_name]']"
         );
@@ -91,12 +80,51 @@ public class NasaSignUpPage
 
     public async Task<bool> IsConfirmationVisibleAsync()
     {
-        var confirmation = _page.Locator(":text-matches('Thank you|API key|Check your email|Success', 'i')");
+        var confirmation = _page.Locator("p:has-text('Your API key for'):has-text('has been e-mailed to you.') ");
         try
         {
             await confirmation.First.WaitForAsync(new() { Timeout = 15000, State = WaitForSelectorState.Visible });
             return true;
         }
         catch { return false; }
+    }
+
+    public async Task<string?> GetValidationMessageAsync(string fieldName)
+    {
+        var selector = fieldName.ToLower() switch
+        {
+            "empty first name" => "div[id='user_first_name_feedback'].invalid-feedback",
+            "empty last name" => "div[id='user_last_name_feedback'].invalid-feedback",
+            "empty email" or "invalid email character" => "div[id='user_email_feedback'].invalid-feedback",
+            _ => throw new ArgumentException($"Unknown field: {fieldName}")
+        };
+
+        var element = _page.Locator(selector);
+
+        if (await element.CountAsync() == 0 || !await element.First.IsVisibleAsync())
+            return null;
+
+        var text = (await element.First.InnerTextAsync()).Trim();
+        return text;
+    }
+
+    public async Task<(bool Visible, string Message)> IsWarningDialogVisibleAsync()
+    {
+        var dialog = _page.Locator("#alert_modal_message");
+
+        try
+        {
+            await dialog.WaitForAsync(new() { Timeout = 5000, State = WaitForSelectorState.Visible });
+
+            var text = (await dialog.InnerTextAsync())?.Trim() ?? string.Empty;
+
+            var isMatch = text.Contains("API key signup unexpectedly failed", StringComparison.OrdinalIgnoreCase);
+
+            return (isMatch, text);
+        }
+        catch
+        {
+            return (false, string.Empty);
+        }
     }
 }

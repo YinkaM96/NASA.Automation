@@ -17,7 +17,6 @@ Feature: Validate Coronal Mass Ejection (CME) API
     And I request CME data from "2023-01-01" to "2023-01-07"
     And I request CME data from "2023-01-01" to "2023-01-07"
     And I request CME data from "2023-01-01" to "2023-01-07"
-    And I request CME data from "2023-01-01" to "2023-01-07"
     Then the response status code should be 429
 
  @API @CME @Error
