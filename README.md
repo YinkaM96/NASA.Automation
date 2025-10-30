@@ -187,7 +187,7 @@ Example excerpt:
 - name: Run SpecFlow UI tests (headless)
   env:
     HEADLESS: true
-  run: dotnet test --configuration Release --filter "TestCategory=ui" --no-build
+  run: dotnet test --configuration Release --filter "TestCategory=UI" --no-build
 ```
 
 ---
