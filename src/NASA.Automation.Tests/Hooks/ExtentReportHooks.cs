@@ -6,9 +6,9 @@ namespace NASA.Automation.Tests.Hooks
     [Binding]
     public sealed class ExtentReportHooks
     {
-        private static AventStack.ExtentReports.ExtentReports _extent;
-        private static ExtentTest _feature;
-        private static ExtentTest _scenario;
+        private static AventStack.ExtentReports.ExtentReports? _extent;
+        private static ExtentTest? _feature;
+        private static ExtentTest? _scenario;
         private readonly ScenarioContext _context;
 
         public ExtentReportHooks(ScenarioContext context)
@@ -42,7 +42,7 @@ namespace NASA.Automation.Tests.Hooks
         [BeforeFeature]
         public static void BeforeFeature(FeatureContext featureContext)
         {
-            _feature = _extent.CreateTest(featureContext.FeatureInfo.Title)
+            _feature = _extent?.CreateTest(featureContext.FeatureInfo.Title)
                 .AssignCategory("Feature")
                 .AssignAuthor("NASA Automation Suite");
         }
@@ -63,10 +63,10 @@ namespace NASA.Automation.Tests.Hooks
                 scenarioTitle += $" [{string.Join(", ", argsList)}]";
             }
 
-            _scenario = _feature.CreateNode(scenarioTitle)
+            _scenario = _feature?.CreateNode(scenarioTitle)
                                 .AssignCategory(string.Join(", ", _context.ScenarioInfo.Tags));
 
-            _scenario.Log(Status.Info, $"Starting Scenario: {scenarioTitle}");
+            _scenario?.Log(Status.Info, $"Starting Scenario: {scenarioTitle}");
         }
 
         [AfterStep]
@@ -79,15 +79,15 @@ namespace NASA.Automation.Tests.Hooks
 
             if (status == Status.Pass)
             {
-                _scenario.Log(status, $"{stepText}");
+                _scenario?.Log(status, $"{stepText}");
             }
             else
             {
-                _scenario.Log(status, $"{stepText} — Error: {_context.TestError.Message}");
+                _scenario?.Log(status, $"{stepText} — Error: {_context.TestError?.Message}");
 
-                if (_context.TestError.StackTrace != null)
+                if (_context.TestError?.StackTrace != null)
                 {
-                    _scenario.Log(Status.Error, $"StackTrace:\n{_context.TestError.StackTrace}");
+                    _scenario?.Log(Status.Error, $"StackTrace:\n{_context.TestError.StackTrace}");
                 }
             }
         }
@@ -95,7 +95,7 @@ namespace NASA.Automation.Tests.Hooks
         [AfterTestRun]
         public static void TearDownReport()
         {
-            _extent.Flush();
+            _extent?.Flush();
             Console.WriteLine("Extent report generated successfully.");
         }
     }
