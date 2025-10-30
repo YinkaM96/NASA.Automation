@@ -202,7 +202,7 @@ Hybrid approach:
 - **SpecFlow** → UI workflows  
 - **NUnit** → API functional validation
 
-### Leveraging AI Copilot & Playwright MCP
+### Leveraging AI Copilot/Cursor & Playwright MCP
 AI tools like GitHub Copilot and Playwright MCP can:
 - Auto-generate PageObject models
 - Heal broken locators
