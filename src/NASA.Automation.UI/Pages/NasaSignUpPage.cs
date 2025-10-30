@@ -47,7 +47,7 @@ public class NasaSignUpPage
         }
     }
 
-    public async Task FillFormAsync(string firstName, string lastName, string? email, string reason)
+    public async Task FillFormAsync(string firstName, string lastName, string email, string reason)
     {
         var firstNameInput = _page.Locator(
             "input[id='user_first_name'], input[name='user[first_name]']"

@@ -66,9 +66,9 @@ public class NasaUiStepDefs
             }
         }
 
-
+        
         var signUpPage = _context.Get<NasaSignUpPage>("signUpPage");
-        await signUpPage.FillFormAsync(firstName, lastName, email, reason);
+        await signUpPage.FillFormAsync(firstName, lastName, email!, reason);
 
         _context["email"] = email;
     }
